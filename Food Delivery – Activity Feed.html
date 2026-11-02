@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Food Delivery – Activity Feed</title>
+<style>
+:root{
+  --bg:#f4f5f9;--card:#ffffff;--ink:#1b1f2a;--mute:#667085;--line:#e4e7ee;--chip:#eceff6;--accent:#2f6fdd;
+  --order:#2f6fdd;--pay:#1f9d62;--del:#e98a15;--rev:#8a56d6;
+  --ok-bg:#e3f6ec;--ok:#14703f;--warn-bg:#fff2d9;--warn:#8a5a00;--bad-bg:#fde6e6;--bad:#a02020;--info-bg:#e3edfd;--info:#1d4fa8;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#12141a;--card:#1b1e27;--ink:#eceef4;--mute:#9aa3b5;--line:#2b303c;--chip:#262a35;--accent:#6a9bff;
+    --order:#6a9bff;--pay:#46c58a;--del:#f2a53d;--rev:#b48cf0;
+    --ok-bg:#14382a;--ok:#7fe0ac;--warn-bg:#3d3015;--warn:#f1c76a;--bad-bg:#431c1c;--bad:#f59a9a;--info-bg:#1b2c4d;--info:#9fc0ff;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12141a;--card:#1b1e27;--ink:#eceef4;--mute:#9aa3b5;--line:#2b303c;--chip:#262a35;--accent:#6a9bff;
+  --order:#6a9bff;--pay:#46c58a;--del:#f2a53d;--rev:#b48cf0;
+  --ok-bg:#14382a;--ok:#7fe0ac;--warn-bg:#3d3015;--warn:#f1c76a;--bad-bg:#431c1c;--bad:#f59a9a;--info-bg:#1b2c4d;--info:#9fc0ff;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:880px;margin:0 auto;padding:24px 16px 48px}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+h1{margin:0;font-size:24px}
+.sub{margin:4px 0 20px;color:var(--mute)}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px 14px;font:inherit;font-weight:600;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+.btn.sm{padding:4px 11px;font-size:13px;margin-top:6px;margin-left:6px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.stat b{display:block;font-size:22px}
+.stat span{color:var(--mute);font-size:13px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.chip{border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip small{opacity:.7;margin-left:4px}
+.row2{display:flex;gap:8px;margin-bottom:18px}
+input,select{font:inherit;color:var(--ink)}
+input[type=search],.f input,.f select{padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);width:100%}
+input[type=search]{flex:1;min-width:0;width:auto}
+.sort{padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+.day{margin:22px 0 8px;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}
+.ev{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.dot{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:16px;color:#fff;background:var(--c)}
+.body{flex:1;min-width:0}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.title{font-weight:600}
+.time{color:var(--mute);font-size:13px;white-space:nowrap}
+.detail{color:var(--mute);font-size:14px;margin-top:2px;overflow-wrap:anywhere}
+.badge{display:inline-block;margin-top:6px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600}
+.ok{background:var(--ok-bg);color:var(--ok)}.warn{background:var(--warn-bg);color:var(--warn)}
+.bad{background:var(--bad-bg);color:var(--bad)}.info{background:var(--info-bg);color:var(--info)}
+.empty{text-align:center;color:var(--mute);padding:40px 0}
+.foot{margin-top:28px;color:var(--mute);font-size:13px;text-align:center}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);padding:20px;width:min(460px,calc(100% - 24px));max-height:90vh;overflow:auto}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h2{margin:0 0 12px;font-size:19px}
+.f{display:block;margin-bottom:12px;font-size:13px;color:var(--mute);font-weight:600}
+.f>*:not(span){margin-top:4px;font-weight:400}
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}
+.item input{width:64px;text-align:center;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--card)}
+.total{display:flex;justify-content:space-between;font-weight:700;font-size:17px;margin:12px 0}
+.err{color:var(--bad);font-size:13px;min-height:18px;margin-bottom:6px}
+.acts{display:flex;justify-content:flex-end;gap:8px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <h1>Food Delivery – Activity Feed</h1>
+      <p class="sub">Every order, payment, delivery step and review recorded in the <code>food_delivery</code> database.</p>
+    </div>
+    <button class="btn primary" id="newOrder">+ Place order</button>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="tools" id="chips"></div>
+  <div class="row2">
+    <input type="search" id="q" placeholder="Search customer, restaurant, item, partner…" aria-label="Search activities">
+    <button class="sort" id="sort">Newest first</button>
+  </div>
+  <div id="feed"></div>
+  <p class="foot" id="foot"></p>
+</div>
+
+<dialog id="orderDlg">
+  <h2>Place a new order</h2>
+  <label class="f"><span>Customer</span><select id="fCust"></select></label>
+  <label class="f"><span>Restaurant</span><select id="fRest"></select></label>
+  <div id="menu"></div>
+  <label class="f" style="margin-top:12px"><span>Delivery address</span><input id="fAddr" placeholder="e.g. 12 MG Road, Pune"></label>
+  <label class="f"><span>Payment method</span>
+    <select id="fPay"><option>UPI</option><option>Card</option><option>Wallet</option><option>Cash</option></select></label>
+  <div class="total"><span>Total</span><span id="fTotal">₹0</span></div>
+  <div class="err" id="fErr"></div>
+  <div class="acts"><button class="btn" id="fCancel">Close</button><button class="btn primary" id="fSubmit">Place order</button></div>
+</dialog>
+
+<dialog id="cancelDlg">
+  <h2 id="cTitle">Cancel order?</h2>
+  <p id="cText" class="sub"></p>
+  <div class="acts"><button class="btn" id="cNo">Keep order</button><button class="btn danger" id="cYes">Cancel order</button></div>
+</dialog>
+<div id="toast" role="status"></div>
+
+<script>
+const R={1:'Spice Villa',2:'Pizza Point',3:'Dragon Wok',4:'Burger Barn',5:'Biryani House'};
+const C={1:'Aarav Sharma',2:'Priya Nair',3:'Rohan Mehta',4:'Sneha Iyer',5:'Karan Verma',6:'Ananya Desai',7:'Vikram Joshi',8:'Meera Nair',10:'Isha Gupta'};
+const P={1:'Vikram Singh',2:'Meena Kumari',3:'Arjun Rathi',5:'Rahul Pawar',6:'Sunita Kale'};
+const MENU={
+ 1:[['Paneer Butter Masala',220],['Butter Naan',40],['Veg Biryani',180]],
+ 2:[['Margherita Pizza',250],['Farmhouse Pizza',320]],
+ 3:[['Veg Manchurian',190],['Chicken Fried Rice',210]],
+ 4:[['Cheese Burger',150],['French Fries',90]],
+ 5:[['Chicken Biryani',280],['Raita',50]]};
+// id, customer, restaurant, datetime, address, status, total, items
+const orders=[
+[1,1,1,'2026-08-28T19:15','12 MG Road, Pune','Delivered',260,'Paneer Butter Masala, Butter Naan'],
+[2,2,2,'2026-08-30T20:05','45 FC Road, Pune','Delivered',570,'Margherita Pizza, Farmhouse Pizza'],
+[3,3,3,'2026-09-02T13:20','7 Baner Road, Pune','Delivered',400,'Veg Manchurian, Chicken Fried Rice'],
+[4,4,4,'2026-09-03T21:10','88 Kothrud, Pune','Delivered',240,'Cheese Burger, French Fries'],
+[5,5,1,'2026-09-04T12:45','23 Aundh, Pune','Cancelled',180,'Veg Biryani'],
+[6,1,2,'2026-09-05T19:40','12 MG Road, Pune','Delivered',250,'Margherita Pizza'],
+[7,6,5,'2026-09-06T20:30','14 Bandra West, Mumbai','Delivered',330,'Chicken Biryani, Raita'],
+[8,8,1,'2026-09-08T13:05','6 Koregaon Park, Pune','Out for Delivery',440,'Paneer Butter Masala ×2'],
+[9,10,3,'2026-09-09T19:55','27 Wakad, Pune','Preparing',190,'Veg Manchurian'],
+[10,7,4,'2026-09-10T18:25','31 College Road, Nashik','Placed',150,'Cheese Burger']];
+// id, order, partner, assigned, picked up, delivered, status
+const deliveries=[
+[1,1,1,'2026-08-28T19:20','2026-08-28T19:32','2026-08-28T19:58','Delivered'],
+[2,2,2,'2026-08-30T20:10','2026-08-30T20:22','2026-08-30T20:51','Delivered'],
+[3,3,3,'2026-09-02T13:25','2026-09-02T13:36','2026-09-02T13:59','Delivered'],
+[4,4,1,'2026-09-03T21:15','2026-09-03T21:27','2026-09-03T21:50','Delivered'],
+[5,6,5,'2026-09-05T19:45','2026-09-05T19:55','2026-09-05T20:20','Delivered'],
+[6,7,6,'2026-09-06T20:35','2026-09-06T20:48','2026-09-06T21:30','Delivered'],
+[7,8,2,'2026-09-08T13:10','2026-09-08T13:22',null,'Picked Up']];
+// id, order, method, amount, reference, status
+const payments=[
+[1,1,'UPI',260,'TXN2608280001','Paid'],[2,2,'Card',570,'TXN2608300002','Paid'],
+[3,3,'Cash',400,'COD-0902-003','Paid'],[4,4,'UPI',240,'TXN2609030004','Paid'],
+[5,5,'Card',180,'TXN2609040005','Refunded'],[6,6,'Wallet',250,'TXN2609050006','Paid'],
+[7,7,'UPI',330,'TXN2609060007','Paid'],[8,8,'Card',440,'TXN2609080008','Pending'],
+[9,9,'UPI',190,'TXN2609090009','Pending']];
+// id, customer, restaurant, order, rating, text, date
+const reviews=[
+[1,1,1,1,5,'Hot food and quick delivery','2026-08-29'],[2,2,2,2,4,'Pizza was good, slightly late','2026-08-31'],
+[3,3,3,3,4,'Tasty Chinese food','2026-09-03'],[4,4,4,4,3,'Burger was cold on arrival','2026-09-04'],
+[5,1,2,6,5,'Perfect Margherita pizza','2026-09-06'],[6,6,5,7,4,'Biryani was flavourful','2026-09-07']];
+
+const CANCELLABLE=['Placed','Preparing'];
+const TYPES={order:['Orders','🛒','--order'],payment:['Payments','₹','--pay'],delivery:['Deliveries','🛵','--del'],review:['Reviews','★','--rev']};
+const rs=n=>'₹'+n.toLocaleString('en-IN');
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const cls=b=>({Delivered:'ok',Paid:'ok',Refunded:'bad',Cancelled:'bad',Pending:'warn',Placed:'warn',Preparing:'warn','Out for Delivery':'info','Picked Up':'info'}[b]||'info');
+const getOrder=id=>orders.find(o=>o[0]===id);
+
+let ev=[],seq=0;
+const add=(type,t,title,detail,badge,dateOnly,orderId)=>ev.push({type,t:new Date(t),title,detail,badge,dateOnly,orderId,seq:seq++});
+function rebuild(){
+  ev=[];seq=0;
+  orders.forEach(o=>add('order',o[3],`Order #${o[0]} placed by ${C[o[1]]}`,`${o[7]} · ${R[o[2]]} · ${rs(o[6])} · ${o[4]}`,o[5],false,o[0]));
+  payments.forEach(p=>{const o=getOrder(p[1]);add('payment',o[3],`Payment for order #${p[1]} – ${rs(p[3])}`,`${p[2]} · ref ${p[4]} · ${C[o[1]]}`,p[5]);});
+  deliveries.forEach(d=>{const o=getOrder(d[1]),who=P[d[2]],to=`${R[o[2]]} → ${o[4]}`;
+    add('delivery',d[3],`${who} assigned to order #${d[1]}`,to,null);
+    add('delivery',d[4],`Order #${d[1]} picked up by ${who}`,to,'Picked Up');
+    if(d[5])add('delivery',d[5],`Order #${d[1]} delivered to ${C[o[1]]}`,to,'Delivered');});
+  reviews.forEach(r=>add('review',r[6]+'T23:59',`${C[r[1]]} rated ${R[r[2]]} ${'★'.repeat(r[4])}${'☆'.repeat(5-r[4])}`,`“${r[5]}” · order #${r[3]}`,null,true));
+}
+
+function drawStats(){
+  const delivered=orders.filter(o=>o[5]==='Delivered');
+  const avg=reviews.reduce((a,r)=>a+r[4],0)/reviews.length;
+  $('stats').innerHTML=[
+   [orders.length,'Orders'],[delivered.length,'Delivered'],[rs(delivered.reduce((a,o)=>a+o[6],0)),'Delivered revenue'],
+   [orders.filter(o=>o[5]==='Cancelled').length,'Cancelled'],
+   [payments.filter(p=>p[5]==='Pending').length,'Payments pending'],[avg.toFixed(1)+' ★','Average rating']
+  ].map(s=>`<div class="stat"><b>${s[0]}</b><span>${s[1]}</span></div>`).join('');
+  $('foot').textContent=`Live data: ${orders.length} orders, ${payments.length} payments, ${deliveries.length} deliveries, ${reviews.length} reviews. New orders and cancellations reset when the page reloads.`;
+}
+
+let filter='all',newest=true,query='';
+function drawChips(){
+  const n=t=>t==='all'?ev.length:ev.filter(e=>e.type===t).length;
+  $('chips').innerHTML=['all',...Object.keys(TYPES)].map(t=>
+   `<button class="chip" data-t="${t}" aria-pressed="${filter===t}">${t==='all'?'All':TYPES[t][0]}<small>${n(t)}</small></button>`).join('');
+}
+$('chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;filter=b.dataset.t;drawChips();draw();});
+$('q').addEventListener('input',e=>{query=e.target.value.toLowerCase().trim();draw();});
+$('sort').addEventListener('click',()=>{newest=!newest;$('sort').textContent=newest?'Newest first':'Oldest first';draw();});
+
+function draw(){
+  const list=ev.filter(e=>(filter==='all'||e.type===filter)&&(!query||(e.title+' '+e.detail).toLowerCase().includes(query)))
+    .sort((a,b)=>(a.t-b.t)||(a.seq-b.seq));
+  if(newest)list.reverse();
+  if(!list.length){$('feed').innerHTML='<div class="empty">No activity matches your filter.</div>';return;}
+  let html='',day='';
+  list.forEach(e=>{
+    const d=e.t.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    if(d!==day){day=d;html+=`<div class="day">${d}</div>`;}
+    const T=TYPES[e.type],time=e.dateOnly?'':e.t.toLocaleTimeString('en-IN',{hour:'numeric',minute:'2-digit',hour12:true});
+    const canCancel=e.type==='order'&&CANCELLABLE.includes(e.badge);
+    html+=`<div class="ev"><div class="dot" style="--c:var(${T[2]})" aria-hidden="true">${T[1]}</div><div class="body">
+      <div class="top"><span class="title">${esc(e.title)}</span><span class="time">${time}</span></div>
+      <div class="detail">${esc(e.detail)}</div>${e.badge?`<span class="badge ${cls(e.badge)}">${esc(e.badge)}</span>`:''}${canCancel?`<button class="btn danger sm" data-cancel="${e.orderId}">Cancel order</button>`:''}</div></div>`;
+  });
+  $('feed').innerHTML=html;
+}
+function refresh(){rebuild();drawStats();drawChips();draw();}
+
+let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2600);}
+
+/* ---------- Place order ---------- */
+$('fCust').innerHTML=Object.entries(C).map(([id,n])=>`<option value="${id}">${esc(n)}</option>`).join('');
+$('fRest').innerHTML=Object.entries(R).map(([id,n])=>`<option value="${id}">${esc(n)}</option>`).join('');
+function drawMenu(){
+  const r=+$('fRest').value;
+  $('menu').innerHTML=MENU[r].map((m,i)=>`<div class="item"><span>${esc(m[0])} <small style="color:var(--mute)">${rs(m[1])}</small></span>
+    <input type="number" min="0" max="20" value="0" data-i="${i}" aria-label="Quantity of ${esc(m[0])}"></div>`).join('');
+  calc();
+}
+function selected(){
+  const r=+$('fRest').value;
+  return [...$('menu').querySelectorAll('input')].map(inp=>({m:MENU[r][+inp.dataset.i],q:Math.max(0,Math.min(20,parseInt(inp.value)||0))})).filter(x=>x.q>0);
+}
+function calc(){$('fTotal').textContent=rs(selected().reduce((a,x)=>a+x.m[1]*x.q,0));}
+function lastAddress(){
+  const c=+$('fCust').value,last=[...orders].reverse().find(o=>o[1]===c);
+  $('fAddr').value=last?last[4]:'';
+}
+$('fRest').addEventListener('change',drawMenu);
+$('fCust').addEventListener('change',lastAddress);
+$('menu').addEventListener('input',calc);
+$('newOrder').addEventListener('click',()=>{$('fErr').textContent='';drawMenu();lastAddress();$('orderDlg').showModal();});
+$('fCancel').addEventListener('click',()=>$('orderDlg').close());
+$('fSubmit').addEventListener('click',()=>{
+  const sel=selected(),addr=$('fAddr').value.trim();
+  if(!sel.length){$('fErr').textContent='Add at least one item.';return;}
+  if(!addr){$('fErr').textContent='Enter a delivery address.';return;}
+  const total=sel.reduce((a,x)=>a+x.m[1]*x.q,0);
+  const items=sel.map(x=>x.q>1?`${x.m[0]} ×${x.q}`:x.m[0]).join(', ');
+  const id=Math.max(...orders.map(o=>o[0]))+1,pid=Math.max(...payments.map(p=>p[0]))+1;
+  const method=$('fPay').value,now=new Date();
+  orders.push([id,+$('fCust').value,+$('fRest').value,now,addr,'Placed',total,items]);
+  payments.push([pid,id,method,total,method==='Cash'?`COD-${id}`:`TXN${now.getTime()}`,'Pending']);
+  $('orderDlg').close();filter='all';newest=true;$('sort').textContent='Newest first';
+  refresh();toast(`Order #${id} placed – ${rs(total)}`);
+});
+
+/* ---------- Cancel order ---------- */
+let cancelId=null;
+$('feed').addEventListener('click',e=>{
+  const b=e.target.closest('[data-cancel]');if(!b)return;
+  const o=getOrder(+b.dataset.cancel);if(!o||!CANCELLABLE.includes(o[5]))return;
+  cancelId=o[0];
+  $('cTitle').textContent=`Cancel order #${o[0]}?`;
+  $('cText').textContent=`${o[7]} from ${R[o[2]]} (${rs(o[6])}). This can't be undone.`;
+  $('cancelDlg').showModal();
+});
+$('cNo').addEventListener('click',()=>$('cancelDlg').close());
+$('cYes').addEventListener('click',()=>{
+  const o=getOrder(cancelId);$('cancelDlg').close();
+  if(!o||!CANCELLABLE.includes(o[5])){toast('This order can no longer be cancelled.');return;}
+  o[5]='Cancelled';
+  const p=payments.find(p=>p[1]===o[0]);let msg=`Order #${o[0]} cancelled`;
+  if(p){if(p[5]==='Paid'){p[5]='Refunded';msg+=' – refund initiated';}else if(p[5]==='Pending')p[5]='Cancelled';}
+  refresh();toast(msg);
+});
+
+refresh();
+</script>
+</body>
+</html>
